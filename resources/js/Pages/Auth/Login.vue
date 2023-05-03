@@ -35,7 +35,7 @@ const submit = () => {
             <form @submit.prevent="submit">
                 <div>
                     <InputLabel for="email" value="Email" />
-
+                    <p class="mt-1 px-2 text-xs"><span class="font-semibold">Demo-email: </span>johndoe@ordersystem.com</p>
                     <TextInput
                         id="email"
                         type="email"
@@ -51,6 +51,7 @@ const submit = () => {
 
                 <div class="mt-4">
                     <InputLabel for="password" value="Password" />
+                    <p class="mt-1 px-2 text-xs"><span class="font-semibold">Demo-password: </span>johndoe1</p>
 
                     <TextInput
                         id="password"

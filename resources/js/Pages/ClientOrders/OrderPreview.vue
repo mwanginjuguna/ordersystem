@@ -219,7 +219,8 @@ onMounted(async () => {
                         >{{ file.name }}</Link>
                     </div>
                 </div>
-                <div class="col-span-2 mt-3 lg: mt-7" v-if="order.paid === 0" >
+
+                <div class="col-span-2 mt-3 lg: mt-7" v-if="order.paid == 0" >
                     <p class="text-red-300 text-xs">* Complete payment for the expert to start working on your order.</p>
                     <div class="p-6 lg:mx-12 text-white rounded-lg flex flex-col space-x-3">
                         <p class="text-slate-900 mg:text-lg bg-blue-400 px-6 mb-4 py-2 uppercase font-bold mx-auto rounded-md">
@@ -233,7 +234,8 @@ onMounted(async () => {
                         <!--
                         <Link :href="route('make-payment', order.id)">
                             <img alt="Checkout" class="round-lg" v-bind:src="'/checkout-with-paypal.png'">
-                        </Link> -->
+                        </Link>
+                        -->
 
 
                     </div>

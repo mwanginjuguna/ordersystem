@@ -4,11 +4,14 @@ import OrdersCard from '../../Components/OrdersCard.vue';
 import {Head, Link} from "@inertiajs/inertia-vue3";
 import Panel from "../../Components/Panel.vue";
 import NavLink from "../../Components/NavLink.vue";
+import {useReadableTime} from "@/Composables/useReadableTime";
 import {watch, reactive, computed} from "vue";
 
 defineProps({
     orders: Object
 })
+
+let { readableTime } = useReadableTime();
 </script>
 
 <template>
@@ -25,12 +28,12 @@ defineProps({
                         <h4 class="font-bold text-xl text-indigo-900 font-serif">
                             Orders
                         </h4>
-                        <a
-                            href="{{ route('orders.new') }}"
+                        <Link
+                            :href=" route('orders.new') "
                             class="p-2 px-4 mr-12 bg-purple-200 text-slate-900 hover:underline border border-slate-700 rounded hover:bg-purple-300 hover:text-slate-800 active:bg-purple-400 active:ring-slate-900 transition ease-in-out hover:duration-500 active:duration-500"
                         >
                             New Order
-                        </a>
+                        </Link>
                     </div>
 
                     <div class="col-span-1 pl-8 flex flex-col space-y-3 p-4 rounded">
@@ -91,7 +94,7 @@ defineProps({
                                     <p class="text-sm flex justify-between space-y-2 items-center py-2 px-3" >
                                         <span class="font-semibold">Order #{{ order.id }}</span>
                                         <span>{{ order.status }}</span>
-                                        <span>{{ order.deadline }} Hours</span>
+                                        <span>{{ readableTime(order.due_at) }}</span>
                                         <Link :class="`text-sky-500 hover:text-sky-700 hover:underline`"
                                               :href="route('orders.show', order.id)"
                                         >View</Link>
