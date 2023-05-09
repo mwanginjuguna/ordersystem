@@ -377,6 +377,7 @@ function toggleCalculator() {
                                     <InputError class="mt-2" :message="form.errors.instructions" />
                                 </div>
 
+                                <!--additional features-->
                                 <div class="grid sm:grid-cols-2 md:grid-cols-3">
                                     <div class="m-4">
                                         <p class="block mb-2 text-sm font-medium text-gray-600 dark:text-white">

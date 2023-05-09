@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Models\AcademicLevel;
+use App\Models\Currency;
 use App\Models\File;
+use App\Models\Rate;
+use App\Models\ServiceType;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +27,10 @@ use App\Http\Controllers\ServiceTypeController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
+        'levels' => AcademicLevel::all(),
+        'currencies' => Currency::all(),
+        'services' => ServiceType::all(),
+        'rates' => Rate::all(),
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
