@@ -3,31 +3,32 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import axios from 'axios';
 import {useFlash} from "@/Composables/useFlash";
 
-export const useLocalOrderStore = defineStore('localOrder',{
+export const useOrderStore = defineStore('OrderStore',{
     state: () => {
         return {
             form : {
-                'title': '',
-                'academic_level_id': 2,
-                'subject_id': 1,
-                'service_type_id': 1,
-                'deadline': 336,
-                'pages': 1,
-                'slides': 0,
-                'sources': 1,
-                'instructions': '',
-                'referencing_style_id': 1,
-                'spacing_id': 1,
-                'writer_category_id': 1,
-                'discount_id': '',
-                'currency_id': 2,
-                'language_id': 1, 'extra': '',
-                'files': [],
-                'amount': '',
-                'name': '',
-                'email': '',
-                'password': '',
-                'password_confirmation': '',
+                title: `Writer's Choice`,
+                academic_level_id: 2,
+                subject_id: 1,
+                service_type_id: 1,
+                deadline: 336,
+                pages: 1,
+                slides: 0,
+                sources: 1,
+                instructions: '',
+                referencing_style_id: 1,
+                spacing_id: 1,
+                writer_category_id: 1,
+                discount_id: '',
+                currency_id: 2,
+                language_id: 1,
+                extra: '',
+                files: [],
+                amount: '',
+                name: '',
+                email: '',
+                password: '',
+                password_confirmation: '',
                 },
             currencies: {},
             discounts: {},
@@ -79,8 +80,8 @@ export const useLocalOrderStore = defineStore('localOrder',{
             }
         },
         // save order details to localStorage
-        saveToLocal() {
-            localStorage.setItem('newOrder', JSON.stringify(this.form));
+        saveToLocal(formData = this.form) {
+            localStorage.setItem('newOrder', JSON.stringify(formData));
         },
         // retrieve order details from localStorage
         getFromLocal() {
@@ -90,7 +91,7 @@ export const useLocalOrderStore = defineStore('localOrder',{
         async saveToDB(formData = this.form) {
             const {flash} = useFlash();
             try {
-                const response = await axios.post('/api/orders', JSON.stringify(formData));
+                const response = await axios.post(route('orders.new'), JSON.stringify(formData));
 
                 // handle successful post request
                 if (response.status === 200) {

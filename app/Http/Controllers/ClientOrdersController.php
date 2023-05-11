@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Models\WriterCategory;
 use App\Notifications\AdminNotification;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -220,6 +221,30 @@ class ClientOrdersController extends Controller
     {
         // new order form
         return Inertia::render('ClientOrders/OrderNew', [
+            'order' => new Order(),
+            'levels' => AcademicLevel::all(),
+            'subjects' => Subject::all(),
+            'services' => ServiceType::all(),
+            'rates' => Rate::all(),
+            'styles' => ReferencingStyle::all(),
+            'spacings' => Spacing::all(),
+            'writerCategories' => WriterCategory::all(),
+            'extras' => AdditionalFeatures::all(),
+            'languages' => Language::all(),
+            'currencies' => Currency::all(),
+            'discounts' => Discount::query()->where('active', '=', '1')->get(),
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new APIresource.
+     *
+     * @return JsonResponse
+     */
+    public function createApi(): JsonResponse
+    {
+        // new order form
+        return response()->json([
             'order' => new Order(),
             'levels' => AcademicLevel::all(),
             'subjects' => Subject::all(),

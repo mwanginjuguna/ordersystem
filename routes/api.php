@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\ClientOrdersController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderMessageController;
+use App\Http\Controllers\PayPalPaymentsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,19 +22,23 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// initialize Order
+Route::get('/api/orders/new', [ClientOrdersController::class, 'createApi'])->name('api.newOrder');
+Route::post('/api/orders', [ClientOrdersController::class, 'storeApi'])->name('api.saveOrder');
+
 Route::group(['prefix'=>'paypal'], function () {
 
-    Route::post('/order/{id}/pay', [\App\Http\Controllers\PayPalPaymentsController::class, 'pay'])
+    Route::post('/order/{id}/pay', [PayPalPaymentsController::class, 'pay'])
         ->name('paypal.pay');
 
-    Route::post('/order/capture/{id}', [\App\Http\Controllers\PayPalPaymentsController::class, 'capture'])
+    Route::post('/order/capture/{id}', [PayPalPaymentsController::class, 'capture'])
         ->name('paypal.capture');
 
 });
 
 Route::group( [ 'prefix' => 'order-messages' ], function () {
-    Route::post('/{id}/message', [\App\Http\Controllers\OrderMessageController::class, 'messagesCreate'])
+    Route::post('/{id}/message', [OrderMessageController::class, 'messagesCreate'])
         ->name('send.message');
-    Route::post('/{id}/messages', [\App\Http\Controllers\OrderMessageController::class, 'messagesIndex'])
+    Route::post('/{id}/messages', [OrderMessageController::class, 'messagesIndex'])
         ->name('show.messages');
 });
