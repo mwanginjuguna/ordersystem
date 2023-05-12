@@ -2,11 +2,12 @@ import { defineStore} from 'pinia';
 import {useForm} from "@inertiajs/inertia-vue3";
 import axios from 'axios';
 import {useFlash} from "@/Composables/useFlash";
+import {parseInt} from "lodash";
 
 export const useOrderStore = defineStore('OrderStore',{
     state: () => {
         return {
-            form : {
+            form : useForm({
                 title: `Writer's Choice`,
                 academic_level_id: 2,
                 subject_id: 1,
@@ -29,7 +30,7 @@ export const useOrderStore = defineStore('OrderStore',{
                 email: '',
                 password: '',
                 password_confirmation: '',
-                },
+                }),
             currencies: {},
             discounts: {},
             extras: {},
@@ -70,13 +71,13 @@ export const useOrderStore = defineStore('OrderStore',{
                     this.writerCategories = orderData.writerCategories ?? null;
                 } else {
                     // handle bad response
-                    flash('Oops', `Could not initialize some details. Server responded with ${response.status} status code! Kindly reload the page.`, 'danger')
+                    flash('Oops', `Could not initialize some details. Server responded with ${response.status} status code! Kindly reload the page.`, 'error')
                 }
 
             } catch (error) {
                 // Handle any errors
                 console.error(error)
-                flash('Error!', `Unable to complete the request. Failed to establish a connection.`, 'danger')
+                flash(`Error! ${error.name}`, `Unable to complete the request. Failed to establish a connection.\n ${error.message}`, 'error')
             }
         },
         // save order details to localStorage
@@ -85,17 +86,18 @@ export const useOrderStore = defineStore('OrderStore',{
         },
         // retrieve order details from localStorage
         getFromLocal() {
-            this.form = localStorage.getItem('newOrder');
+            this.form = JSON.parse(localStorage.getItem('newOrder'));
         },
         // save form to db
         async saveToDB(formData = this.form) {
             const {flash} = useFlash();
             try {
-                const response = await axios.post(route('orders.new'), JSON.stringify(formData));
+                const response = await axios.post(route('orders.new'), formData);
 
                 // handle successful post request
                 if (response.status === 200) {
                     console.log("Success.", response.data); // Removed unnecessary JSON.stringify()
+                    localStorage.removeItem('newOrder');
                     flash('Success!', 'Order saved successfully. Redirecting to Checkout.', 'success');
                     setTimeout(() => { // Changed setInterval to setTimeout
                         window.location.href = `/orders/preview/${response.data.order.id}`;
@@ -104,9 +106,37 @@ export const useOrderStore = defineStore('OrderStore',{
             } catch (error) {
                 console.log(error)
                 // catch error
-                flash('Error!', `The request was not successful. Failed to establish connection with the server.`, 'danger')
+                flash('Error!', `The request was not successful. Failed to establish connection with the server.`, 'error')
             }
         }
-    }
+    },
 
+    getters: {
+        /*getPrice() {
+            let total = parseInt(Object.values(this.rates).find((x) => Object.values(x).includes(this.form.deadline)).amount ?? 0);
+            // let levelRate = Object.values(this.levels).find( (x)=> Object.values(x).includes(this.form.academic_level_id) ).rate ?? 0;
+            // let serviceRate = Object.values(this.services).find( (x)=> Object.values(x).includes(this.form.service_type_id) ).rate ?? 0;
+
+            let levelRate = Object.values(this.levels).some(x => Object.values(x).includes(this.form.academic_level_id)) ? Object.keys(this.levels).find(key => Object.values(this.levels[key]).includes(this.form.academic_level_id)).rate : 0;
+
+            let serviceRate = Object.values(this.services).some(x => Object.values(x).includes(this.form.service_type_id)) ? Object.keys(this.services).find(key => Object.values(this.services[key]).includes(this.form.service_type_id)).rate : 0;
+
+
+            let rateTotal = total + total*(levelRate/100) + total*(serviceRate/100)
+
+            let pages = this.form.pages;
+            let slides = this.form.slides;
+
+            total = (Math.round(
+                ((rateTotal * pages) + (rateTotal * slides)
+                ) * 100)/ 100)
+                .toFixed(2);
+
+            let amount = total;
+            amount = (Math.round(total * 100)/ 100)
+                    .toFixed(2);
+            this.form.amount = amount;
+            return amount;
+        }*/
+    }
 })

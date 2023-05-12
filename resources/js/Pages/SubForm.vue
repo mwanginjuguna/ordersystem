@@ -1,6 +1,6 @@
 <template>
     <section class="relative grid">
-        <form @submit.prevent="form" style="z-index: 3;" class="max-w-xs mt-6 p-2 lg:px-4 bg-white rounded-xl shadow shadow-purple-200 text-xs relative">
+        <form @submit.prevent="saveToLocal" style="z-index: 3;" class="max-w-xs mt-6 p-2 lg:px-4 bg-white rounded-xl shadow shadow-purple-200 text-xs relative">
             <p class="font-bold text-slate-800 text-xl">Calculate Price</p>
 
             <div class="mt-2">
@@ -65,7 +65,7 @@
                     </select>
                 </div>
 
-            <!--slides-->
+            <!--price-->
             <div class="mt-2">
                 <p class="text-sm text-gray-700 text-right p-1">Price: <span class="px-1 underline underline-offset-4 font-bold italic text-lg text-purple-900">${{ amount }}</span></p>
             </div>
@@ -144,6 +144,7 @@
 import {defineProps, onMounted, ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {parseInt} from "lodash/string";
+import {useOrderStore} from "@/stores/OrderStore";
 
 
 const amount = ref(null);
@@ -166,7 +167,7 @@ const props = defineProps({
 
 const form = useForm(
     {
-        'title': "Writer's Choice ",
+        'title': "Writer's Choice",
         'academic_level_id': 2,
         'subject_id': 1,
         'service_type_id': 1,
@@ -190,27 +191,20 @@ const form = useForm(
     }
 );
 onMounted(getPrice)
-const addOrder = () => {
-    // ask user to register or save order to localStorage
-    form.post(route('orders.new'), {
-        onError: () => { modalClose(); },
-        preserveScroll: false,
-        onFinish: () => { form.reset(); },
 
-    });
+let orderStore = useOrderStore();
+
+const saveToLocal = () => {
+    orderStore.form = form.data();
+    orderStore.saveToLocal(form.data());
+    window.location.href='/orders/new';
 }
 
 function getPrice() {
     let total = parseInt(Object.values(props.rates).find((x) => Object.values(x).includes(form.deadline)).amount ?? 0);
     baseRate.value = total;
     levelRate.value = Object.values(props.levels).find( (x)=> Object.values(x).includes(form.academic_level_id) ).rate ?? 0;
-    // subjectRate.value = Object.values(props.subjects).find( (x)=> Object.values(x).includes(form.subject_id) ).rate ?? 0;
     serviceRate.value = Object.values(props.services).find( (x)=> Object.values(x).includes(form.service_type_id) ).rate ?? 0;
-    // spacingRate.value = Object.values(props.spacings).find( (x)=> Object.values(x).includes(form.spacing_id) ).rate ?? 0;
-    // writerRate.value = Object.values(props.writerCategories).find( (x)=> Object.values(x).includes(form.writer_category_id) ).rate ?? 0;
-    // currencyRate.value = Object.values(props.currencies).find( (x)=> Object.values(x).includes(form.currency_id) ).rate ?? 0;
-    // currencySymbol.value = Object.values(props.currencies).find( (x)=> Object.values(x).includes(form.currency_id) ).symbol;
-
     let rateTotal = total + total*(levelRate.value/100) + total*(serviceRate.value/100)
 
     let pages = form.pages;
@@ -222,19 +216,9 @@ function getPrice() {
         .toFixed(2);
 
     amount.value = total;
-    if (discountRate.value !== null)
-    {
-        amount.value = (Math.round(
-            (total - ((discountRate.value / 100) * total))
-            * 100)/ 100)
+    amount.value = (Math.round(total * 100)/ 100)
             .toFixed(2);
-        form.amount = amount.value;
-    } else
-    {
-        amount.value = (Math.round(total * 100)/ 100)
-            .toFixed(2);
-        form.amount = amount.value;
-    }
+    form.amount = amount.value;
 }
 
 function modalClose() {

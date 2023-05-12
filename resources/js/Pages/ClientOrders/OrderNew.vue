@@ -7,11 +7,20 @@ import InputError from "../../Components/InputError.vue";
 import InputLabel from "../../Components/InputLabel.vue";
 import TextInput from "../../Components/TextInput.vue";
 import Checkbox from "../../Components/Checkbox.vue";
-import {defineProps, onMounted, ref} from "vue";
+import {defineProps, onBeforeMount, onMounted, ref} from "vue";
 import {useForm, Link} from "@inertiajs/inertia-vue3";
 import PrimaryButton from "../../Components/PrimaryButton.vue";
-import {parseInt} from "lodash/string";
+import {parseInt} from "lodash";
+import {useOrderStore} from "@/stores/OrderStore";
 
+let orderStore = useOrderStore();
+
+const localOrder = JSON.parse(localStorage.getItem('newOrder'));
+
+onBeforeMount(() => {
+    // orderStore.loadOrderDependencies();
+    orderStore.getFromLocal();
+})
 
 const amount = ref(null);
 const baseRate = ref(null);
@@ -46,14 +55,14 @@ const props = defineProps({
     discounts: Object,
 });
 
-const form = useForm(
+let form = useForm(
     {
-        'title': '',
-        'academic_level_id': 2,
+        'title': localOrder.title ?? '',
+        'academic_level_id': localOrder.academic_level_id ?? 2,
         'subject_id': 1,
-        'service_type_id': 1,
-        'deadline': 336,
-        'pages': 1,
+        'service_type_id': localOrder.service_type_id ?? 1,
+        'deadline': localOrder.deadline ?? 336,
+        'pages': localOrder.pages ?? 1,
         'slides': 0,
         'sources': 1,
         'instructions': '',
@@ -77,8 +86,7 @@ const addOrder = () => {
     form.post(route('orders.new'), {
         onError: () => { modalClose(); },
         preserveScroll: false,
-        onFinish: () => { form.reset(); },
-
+        onFinish: () => { form.reset(); localStorage.removeItem('newOrder') },
     });
 }
 
@@ -172,151 +180,152 @@ function toggleCalculator() {
 <template>
     <GuestLayout>
         <template #header>
-            <h1 class="font-bold sm:font-extrabold text-indigo-900 lg:pr-12 leading-8 text-center text-xl md:text-4xl">
+            <h1 class="font-bold sm:font-extrabold font-serif text-indigo-900 leading-8 text-xl md:text-4xl">
                 Create a New Order
             </h1>
-            <p class="justify-self-center text-center text-xs text-gray-500 p-4">
-                <span class="font-bold">About: </span>Place an order for an assignment or a task.
+            <p class="justify-self-center text-xs lg:text-base text-gray-500 p-4">
+                <span class="font-bold">Description: </span>Place an order for a case study project, assignment or any task.
             </p>
         </template>
             <section>
-                <div class="mx-3 md:mx-8 sm:m-2 p-2">
+                <div class="mx-3 md:mx-8 sm:m-2 p-2 border-t">
                     <form>
-                        <section class="grid grid-cols-7 gap-4">
-                            <div class="col-span-7 lg:col-span-5 lg:col-start-2 px-4 py-5 sm:p-6 bg-white md:bg-slate-50 rounded-lg shadow-md shadow-purple-900">
-                                <div class="mx-4 mb-4">
+                        <!--form version 2-->
+                        <section class="grid lg:grid-cols-5 gap-4 lg:m-6">
+                            <div class="lg:col-span-4 px-4 py-5 sm:p-6 max-w-3xl divide-y">
+                                <!--title/topic-->
+                                <div class="md:mx-4 mb-4">
                                     <label class="text-sm lg:text-base font-semibold">
                                         Title/Topic <span class="text-red-500 text-xs">* required</span>
                                     </label><br>
                                     <input type="text"
-                                           class="border-1 p-2 w-full md:w-4/5 border-gray-400 text-sm rounded"
+                                           class="ml-3 mt-2 border-1 p-2 w-full border-gray-400 text-sm rounded"
                                            v-model="form.title"
                                            ref="titleInput"
                                            name="title" id="title"
                                            placeholder="Enter Topic of your Assignment/Paper" required>
                                     <InputError class="mt-2" :message="form.errors.title" />
                                 </div>
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                <!--Academic Level-->
+                                <div class="md:mx-4 my-4 pt-3 md:flex justify-between">
+                                    <label for="academic_level" class="font-semibold text-sm lg:text-base">
+                                        Corporate/Academic Level: <span class="text-slate-500 text-xs">Select the most appropriate description of your institutional/corporate level.</span>
+                                    </label>
+                                    <select id="academic_level"
+                                            v-model="form.academic_level_id"
+                                            @change="getPrice"
+                                            class="place-self-center block md:inline-flex mt-1 ml-3 w-full md:w-1/2 rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
+                                            name="academic_level" autofocus>
+                                        <option disabled value="">Select your school level</option>
+                                        <option v-for="level in levels" :value="level.id">{{ level.name }}</option>
+                                    </select>
+                                </div>
 
-                                    <!--Academic Level-->
-                                    <div class="mx-4">
-                                        <label for="academic_level" class="font-semibold text-sm">
-                                            Academic Level
-                                        </label>
-                                        <select id="academic_level"
-                                                v-model="form.academic_level_id"
-                                                @change="getPrice"
-                                                class="block w-full rounded text-gray-900 text-sm"
-                                                name="academic_level" autofocus>
-                                            <option disabled value="">Select your school level</option>
-                                            <option v-for="level in levels" :value="level.id">{{ level.name }}</option>
-                                        </select>
-                                    </div>
+                                <!--Service TYpes-->
+                                <div class="md:mx-4 mb-4 pt-3 md:flex justify-between">
+                                    <label for="service_type" class="font-semibold text-sm lg:text-base lg:py-2">
+                                        Type of Service: <span class="text-slate-500 text-xs lg:text-sm">Choose the type of service you need assistance with e.g Report Writing, Case Study writing, PowerPoint presentation, etc.</span>
+                                    </label>
 
-                                    <!--Service TYpes-->
-                                    <div class="mx-4">
-                                        <label for="service_type" class="font-semibold text-sm">
-                                            Type of Service
-                                        </label>
+                                    <select id="service_type"
+                                            v-model="form.service_type_id"
+                                            @change="getPrice"
+                                            class="place-self-center block md:inline-flex mt-1 ml-3 w-full md:w-1/2 rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
+                                            name="service_type" autofocus>
+                                        <option disabled value="">Select type of service</option>
+                                        <option v-for="service in services" :value="service.id">{{ service.name }}</option>
+                                    </select>
+                                </div>
 
-                                        <select id="service_type"
-                                                v-model="form.service_type_id"
-                                                @change="getPrice"
-                                                class="block w-full rounded text-gray-900 text-sm"
-                                                name="service_type" autofocus>
-                                            <option disabled value="">Select type of service</option>
-                                            <option v-for="service in services" :value="service.id">{{ service.name }}</option>
-                                        </select>
-                                    </div>
+                                <!--Subjects-->
+                                <div class="md:mx-4 mb-4 pt-3 md:flex justify-between">
+                                    <label for="subject" class="font-semibold text-sm">
+                                        Subject Area: <span class="text-slate-500 text-xs lg:text-sm">Choose a discipline/subject area for this product e.g Nursing, Engineering, NGO, etc.</span>
+                                    </label>
 
-                                    <!--Subjects-->
-                                    <div class="mx-4">
-                                        <label for="subject" class="font-semibold text-sm">
-                                            Subject
-                                        </label>
+                                    <select id="subject"
+                                            v-model="form.subject_id"
+                                            @change="getPrice"
+                                            class="place-self-center block md:inline-flex mt-1 ml-3 w-full md:w-1/2 rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
+                                            name="subject" autofocus>
+                                        <option disabled value="">Select your area of study</option>
+                                        <option v-for="subject in subjects" :value="subject.id">{{ subject.name }}</option>
+                                    </select>
+                                </div>
 
-                                        <select id="subject"
-                                                v-model="form.subject_id"
-                                                @change="getPrice"
-                                                class="block w-full rounded text-gray-900 text-sm"
-                                                name="subject" autofocus>
-                                            <option disabled value="">Select your area of study</option>
-                                            <option v-for="subject in subjects" :value="subject.id">{{ subject.name }}</option>
-                                        </select>
-                                    </div>
+                                <!--Deadline-->
+                                <div class="md:mx-4 mb-4 pt-3 flex justify-between">
+                                    <label for="deadline" class="place-self-center font-semibold">
+                                        Deadline: <span class="text-red-500 text-xs">* required</span>
+                                    </label>
 
-                                    <!--Deadline-->
-                                    <div class="mx-4">
-                                        <label for="deadline" class="font-semibold text-sm">
-                                            Deadline: <span class="text-red-500 text-xs">* required</span>
-                                        </label>
+                                    <select id="deadline"
+                                            v-model="form.deadline"
+                                            @change="getPrice"
+                                            class="place-self-center mt-1 ml-3 w-1/2 rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
+                                            name="deadline" autofocus>
+                                        <option disabled value="">Select the deadline</option>
+                                        <option v-for="rate in rates" :value="rate.hours">{{ rate.name }}</option>
+                                    </select>
+                                </div>
 
-                                        <select id="deadline"
-                                                v-model="form.deadline"
-                                                @change="getPrice"
-                                                class="block w-full rounded text-gray-900 text-sm"
-                                                name="deadline" autofocus>
-                                            <option disabled value="">Select the deadline</option>
-                                            <option v-for="rate in rates" :value="rate.hours">{{ rate.name }}</option>
-                                        </select>
-                                    </div>
+                                <!--Pages-->
+                                <div class="md:mx-4 mb-4 pt-3 md:flex justify-between">
+                                    <label for="pages" class="font-semibold">
+                                        Pages: <span class="text-slate-500 text-xs lg:text-sm">How many pages/words are required?</span>
+                                    </label>
 
-                                    <!--Pages-->
-                                    <div class="mx-4">
-                                        <label for="pages" class="font-semibold text-sm">
-                                            Pages
-                                        </label>
+                                    <select id="pages"
+                                            v-model="form.pages"
+                                            @change="getPrice"
+                                            class="place-self-center block md:inline-flex mt-1.5 ml-3 w-full md:w-1/2 rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
+                                            name="pages" autofocus>
+                                        <option disabled value="">Select number of Pages</option>
+                                        <option :value="0">0 Pages/ 0 words</option>
+                                        <option v-for="page in 200" :key="page" :value="page">{{ page }} page(s) / {{ page * 275 }} words</option>
+                                    </select>
+                                </div>
 
-                                        <select id="pages"
-                                                v-model="form.pages"
-                                                @change="getPrice"
-                                                class="block w-full rounded text-gray-900 text-sm"
-                                                name="pages" autofocus>
-                                            <option disabled value="">Select number of Pages</option>
-                                            <option :value="0">0 Pages/ 0 words</option>
-                                            <option v-for="page in 200" :key="page" :value="page">{{ page }} page(s) / {{ page * 275 }} words</option>
-                                        </select>
-                                    </div>
+                                <!--slides-->
+                                <div class="md:mx-4 mb-4 pt-3 flex justify-between align-middle">
+                                    <label for="slides" class="font-semibold text-sm">
+                                        Slides: <span class="text-slate-500 text-xs lg:text-sm">Enter number of slides if needed.</span>
+                                    </label>
 
-                                    <!--slides-->
-                                    <div class="mx-4">
-                                        <label for="slides" class="font-semibold text-sm">
-                                            Slides
-                                        </label>
+                                    <input id="slides"
+                                           v-model="form.slides"
+                                           @change="getPrice"
+                                           type="number"
+                                           class="place-self-center block md:inline-flex mt-1 ml-3 w-full md:w-1/2 rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
+                                           name="slides" autofocus>
+                                </div>
 
-                                        <input id="slides"
-                                               v-model="form.slides"
-                                               @change="getPrice"
-                                               type="number"
-                                               class="block w-full rounded text-gray-900 text-sm"
-                                               name="slides" autofocus>
-                                    </div>
+                                <!--Referencing styles-->
+                                <div class="md:mx-4 mb-4 pt-3 md:flex justify-between">
+                                    <label for="referencing_style" class="font-semibold text-sm">
+                                        Referencing Style <span class="text-slate-500 text-xs lg:text-sm">Choose a referencing/citation style e.g APA, OSCLA, Havard, etc.</span>
+                                    </label>
 
-                                    <!--Referencing styles-->
-                                    <div class="mx-4">
-                                        <label for="referencing_style" class="font-semibold text-sm">
-                                            Referencing Style
-                                        </label>
+                                    <select id="referencing_style"
+                                            v-model="form.referencing_style_id"
+                                            class="place-self-center block md:inline-flex mt-1 ml-3 w-full md:w-1/2 rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
+                                            name="referencing_style" autofocus>
+                                        <option disabled value="">Select Referencing Style</option>
+                                        <option v-for="style in styles" :value="style.id">{{ style.name }}</option>
+                                    </select>
+                                </div>
 
-                                        <select id="referencing_style"
-                                                v-model="form.referencing_style_id"
-                                                class="block w-full rounded text-gray-900 text-sm"
-                                                name="referencing_style" autofocus>
-                                            <option disabled value="">Select Referencing Style</option>
-                                            <option v-for="style in styles" :value="style.id">{{ style.name }}</option>
-                                        </select>
-                                    </div>
-
+                                <div class="grid md:grid-cols-2 gap-4 mb-4 pt-3">
                                     <!--Line Spacing-->
                                     <div class="mx-4">
                                         <label for="spacing" class="font-semibold text-sm">
-                                            Line Spacing
+                                            Line Spacing:
                                         </label>
 
                                         <select id="spacing"
                                                 v-model="form.spacing_id"
                                                 @change="getPrice"
-                                                class="block w-full rounded text-gray-900 text-sm"
+                                                class="block w-full rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
                                                 name="spacing" autofocus>
                                             <option disabled value="">Select line spacing</option>
                                             <option v-for="spacing in spacings" :value="spacing.id">{{ spacing.name }}</option>
@@ -324,23 +333,24 @@ function toggleCalculator() {
                                     </div>
 
                                     <!--sources-->
-                                    <div class="mx-4">
+                                    <div class="mx-4 mb-4 pt-3 ">
                                         <label for="sources" class="font-semibold text-sm">
-                                            Sources
+                                            Sources: <span class="hidden md:block text-xs font-light text-slate-600">No. of references/bibliography entries</span>
                                         </label>
 
                                         <input id="sources"
                                                v-model="form.sources"
                                                type="number"
-                                               class="block w-full rounded text-gray-900 text-sm"
+                                               class="block rounded w-full text-gray-900 text-sm bg-slate-100 border-slate-200"
                                                name="sources" autofocus>
                                     </div>
+
                                     <!--Writer Category-->
                                     <div class="m-4">
-                                        <label for="writer_category" class="text-sm">
+                                        <label for="writer_category" class="font-semibold text-sm md:text-base">
                                             Writer Category:
                                         </label>
-                                        <select id="writer_category" class="block w-full md:w-4/5 rounded text-gray-900 text-sm"
+                                        <select id="writer_category" class="place-self-center block mt-1 ml-3 w-full rounded text-gray-900 text-sm bg-slate-100 border-slate-200"
                                                 v-model="form.writer_category_id"
                                                 @change="getPrice"
                                                 name="writer_category" autofocus>
@@ -348,13 +358,14 @@ function toggleCalculator() {
                                             <option v-for="category in writerCategories" :value="category.id">{{ category.name }}</option>
                                         </select>
                                     </div>
+
                                     <!--language-->
                                     <div class="m-4">
                                         <label for="language" class="text-sm">
                                             Language:
                                         </label>
                                         <select id="language"
-                                                class="block w-full md:w-4/5 rounded text-gray-900 text-sm"
+                                                class="block w-full md:w-4/5 rounded text-gray-900 text-sm border-slate-200 bg-slate-100"
                                                 v-model="form.language_id"
                                                 name="language" autofocus>
                                             <option disabled value="">Select preferred Language</option>
@@ -363,9 +374,10 @@ function toggleCalculator() {
                                     </div>
                                 </div>
 
+
                                 <!--instructions-->
-                                <div class="mb-8 m-4">
-                                    <label for="instructions" class="block mb-2 text-sm font-semibold dark:text-white">
+                                <div class="pt-3 mb-8 m-4">
+                                    <label for="instructions" class="block mb-2 font-semibold dark:text-white">
                                         Instructions:<span class="text-red-500 text-xs">* required</span>
                                     </label>
                                     <textarea id="instructions"
@@ -413,7 +425,8 @@ function toggleCalculator() {
                                         <input hidden v-model="form.amount" >
                                     </div>
                                 </div>
-                                <div class="grid mx-auto my-4">
+
+                                <div class="grid mx-auto pt-4">
                                     <div class="">
                                         <PrimaryButton @click="addOrder"
                                                        v-if="$page.props.auth.user"
@@ -431,14 +444,16 @@ function toggleCalculator() {
                                     </div>
 
                                 </div>
+
                             </div>
 
+
                             <!--price calculator-->
-                            <div class="col-span-6 lg:col-span-1 py-4 px-3">
-                                <div class="hidden md:block rounded-lg mx-auto max-w-sm fixed top-56 lg:top-28 right-0 lg:right-12">
-                                    <Accordion :show="true" class="text-green-500 text-xs lg:text-sm hover:text-green-500 bg-slate-900 font-semibold bg-opacity-90 p-3 px-6">
+                            <div class="col-span-5 lg:col-span-1 py-4 px-3">
+                                <div class="hidden md:block rounded-lg mx-auto max-w-sm fixed top-56 lg:top-44 right-0 lg:right-28">
+                                    <Accordion :show="true" class="text-slate-50 text-xs lg:text-sm hover:text-white bg-purple-900 font-semibold bg-opacity-90 p-3 px-6">
                                         <template #title>
-                                            <h2 class="font-bold text-center text-green-500 uppercase">Price Calculator</h2>
+                                            <h2 class="font-bold text-center text-white font-serif uppercase">Price Calculator</h2>
                                         </template>
                                         <template #content>
                                             <div class="flex-col divide-y items-center lg:mx-auto space-y-1.5 py-2">
@@ -523,7 +538,7 @@ function toggleCalculator() {
                                     </Accordion>
                                 </div>
                                 <div class="rounded-lg md:hidden mx-auto max-w-sm fixed top-20 right-0 ">
-                                    <Accordion :show="false" class="text-green-500 text-xs lg:text-sm hover:text-green-500 bg-slate-900 font-semibold bg-opacity-90 p-3 px-6">
+                                    <Accordion :show="false" class="text-slate-50 text-xs lg:text-sm bg-purple-800 font-semibold bg-opacity-90 p-3 px-6">
                                         <template #title>
                                             <div>
                                                 <h2 @click="toggleCalculator" class="font-bold text-center text-white uppercase">
@@ -617,6 +632,7 @@ function toggleCalculator() {
                             </div>
 
                         </section>
+
 
 
                         <!--user_register-->
