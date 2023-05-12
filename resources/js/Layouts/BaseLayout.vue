@@ -10,19 +10,20 @@ import Sidebar from '../Components/Sidebar.vue'
 import FlashMessage from "../Components/FlashMessage.vue";
 
 const showingNavigationDropdown = ref(false);
+const showingSidebar = ref(false)
 </script>
 
 <template>
     <div>
-        <div class="min-h-screen bg-white">
-            <nav class="bg-slate-100 border-b border-purple-200">
+        <div class="relative min-h-screen bg-white">
+            <nav class="sticky top-0 left-0 bg-purple-200">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
                         <div class="flex">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('home')">
                                     <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     />
@@ -36,6 +37,9 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
                                 <NavLink :href="route('admin')" :active="route().current('admin')">
                                     Admin
+                                </NavLink>
+                                <NavLink :href="route('home')" :active="route().current('home')">
+                                    Home
                                 </NavLink>
                             </div>
                         </div>
@@ -117,9 +121,13 @@ const showingNavigationDropdown = ref(false);
                     class="sm:hidden"
                 >
                     <div class="pt-2 pb-3 space-y-1">
+                        <ResponsiveNavLink :href="route('home')" :active="route().current('home')">
+                            Home
+                        </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                             Dashboard
                         </ResponsiveNavLink>
+
                     </div>
 
                     <!-- Responsive Settings Options -->
@@ -143,9 +151,41 @@ const showingNavigationDropdown = ref(false);
 
             <div class="grid md:grid-cols-5 lg:m-5 lg:rounded">
                 <!-- Sidebar here -->
-                <aside class="hidden md:block relative md:text-sm lg:text-base lg:rounded-lg md:col-span-1 bg-slate-900 text-white min-h-screen p-4 lg:pl-5 shadow-xl shadow-purple-900 scroll-auto overflow-y-auto pb-6">
+                <aside
+                    :class="{ block: showingSidebar, hidden: !showingSidebar }"
+                    class="sm:hidden relative md:text-sm lg:text-base lg:rounded-lg md:col-span-1 bg-slate-900 text-white min-h-screen p-4 lg:pl-5 shadow-xl shadow-purple-900 scroll-auto overflow-y-auto pb-6">
                     <Sidebar />
                 </aside>
+                <!-- Hamburger -->
+                <div class="-mr-2 z-18 flex items-center fixed top-10 left-0 sm:hidden">
+                    <button
+                        @click="showingSidebar = !showingSidebar"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out"
+                    >
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path
+                                :class="{
+                                            hidden: showingSidebar,
+                                            'inline-flex': !showingSidebar,
+                                        }"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"
+                            />
+                            <path
+                                :class="{
+                                            hidden: !showingSidebar,
+                                            'inline-flex': showingSidebar,
+                                        }"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
 
                 <div class="md:col-span-4 lg:mx-6 lg:border-l lg:rounded-xl">
                     <!-- Page Heading -->

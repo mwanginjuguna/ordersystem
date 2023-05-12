@@ -36,7 +36,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('home');
 
 Route::get('/email-test', function () {
     return view('welcome');
@@ -149,6 +149,8 @@ Route::middleware('admin')->group( function () {
                 return response()->download($path2);
             })->name('files.download');
             Route::post('admin/orders/order/{id}/upload-file', 'uploadFiles')->name('orders.upload-file');
+            Route::post('admin/orders/order/{id}/delete-file', 'destroyFile')->name('destroyFile');
+            Route::post('admin/orders/order/show-file-to-client/{id}/', 'showClient')->name('showClient');
             Route::post('/admin/orders/order/revision/{id}', 'requestRevision')->name('orders.revisionRequest');
             Route::patch('/admin/orders/order/extend/{id}', 'extendDeadline')->name('orders.extend');
             Route::patch('/admin/orders/order/assign/{id}', 'assignWriter')->name('orders.assign');

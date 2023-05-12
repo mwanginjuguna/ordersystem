@@ -14,8 +14,8 @@ const showingNavigationDropdown = ref(false);
 
 <template>
     <div>
-        <div class="min-h-screen bg-white">
-            <nav class="bg-fuchsia-50 text-black border-b border-gray-100">
+        <div class="relative min-h-screen bg-white">
+            <nav class="sticky top-0 right-0 z-10 bg-purple-400 text-white border-b border-gray-100">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
@@ -34,8 +34,14 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
                                 </NavLink>
+                                <NavLink :href="route('home')" :active="route().current('home')">
+                                    Home
+                                </NavLink>
                                 <NavLink :href="route('admin')" :active="route().current('admin')">
                                     Admin
+                                </NavLink>
+                                <NavLink :href="route('home')" :active="route().current('home')">
+                                    Services
                                 </NavLink>
                             </div>
                         </div>
@@ -120,6 +126,12 @@ const showingNavigationDropdown = ref(false);
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                             Dashboard
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('home')" :active="route().current('home')">
+                            Home
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('orders.new')" :active="route().current('orders.new')">
+                            New Order
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
@@ -143,7 +155,7 @@ const showingNavigationDropdown = ref(false);
 
             <div class="grid md:grid-cols-5 lg:m-5 lg:rounded">
                 <!-- Sidebar here -->
-                <aside class="hidden md:block relative md:text-sm lg:text-base lg:rounded-lg md:col-span-1 bg-fuchsia-900 text-white min-h-screen p-4 lg:pl-5 shadow-xl shadow-purple-900 scroll-auto overflow-y-auto pb-6">
+                <aside class="hidden md:block relative md:text-sm lg:text-base lg:rounded-lg md:col-span-1 bg-purple-500 text-white min-h-screen p-4 lg:pl-5 shadow-xl shadow-purple-900 scroll-auto overflow-y-auto pb-6">
                     <ClientSidebar />
                 </aside>
 

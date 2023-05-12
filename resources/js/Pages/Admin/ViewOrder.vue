@@ -10,6 +10,7 @@ import SecondaryButton from "../../Components/SecondaryButton.vue";
 import {useFlash} from "@/Composables/useFlash";
 import TextInput from "../../Components/TextInput.vue";
 import InputError from "../../Components/InputError.vue";
+import axios from "axios";
 
 function showComplete() {
     return (orderObject.status in ['pending', 'new', 'submitted', 'cancelled']);
@@ -256,6 +257,15 @@ function toggleMessage()
     showMessage.value = true;
 }
 
+async function showClient(fileId) {
+    const response = await axios.post(route('showClient', fileId))
+
+    // handle success
+    if (response.status === 200) {
+        flash('Success Updating File.', `File options updated successfully. The client can now see and download the file.`, 'success')
+    }
+}
+
 function getTime(timestamp) {
     const dateString = timestamp;
     const date = new Date(dateString);
@@ -411,7 +421,8 @@ function getTime(timestamp) {
                 <!--Files-->
                 <div class="col-span-2" v-if="files.length > 0">
                     <h3 class="font-bold">Files:</h3>
-                    <div class="p-2.5 py-6 grid grid-cols-1 gap-x-4 gap-y-3 mt-4 mb-6 bg-slate-700 max-w-2xl text-white mx-auto rounded-lg border border-fuchsia-200">
+                    <!--upload/add files-->
+                    <div class="p-2.5 py-6 grid grid-cols-1 gap-x-4 gap-y-3 mt-4 mb-6 bg-slate-200 max-w-2xl text-slate-800 mx-auto rounded-lg border border-fuchsia-200">
                         <label class="font-semibold px-6 mx-auto">Add files</label>
                         <input multiple
                                class="text-black bg-white pl-1.5 py-1.5 my-auto mx-auto rounded-lg"
@@ -430,19 +441,31 @@ function getTime(timestamp) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#18e516" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.7-3-3.2-5.2-6.2-5.6-3-.3-5.9 1.3-7.3 4-1.2 2.5-1 6.5.5 8.8m8.7-1.6V21"/><path d="M16 16l-4-4-4 4"/></svg>
                         </button>
                     </div>
-                    <div class="grid md:grid-cols-3 grid-cols-2 md:gap-4 max-w-2xl md:text-sm border-b border-gray-200 py-1.5" v-for="file in files">
-                        <Link class="hover:text-violet-600 underline text-violet-900 "
-                              @click="downloadFile(file.id, file.name)"
-                        >{{ file.name }}</Link>
-                        <p>File Type:
-                            <span v-if="file.uploaded_by === 'U'" class="pl-3 text-blue-500"> Order File </span>
-                            <span v-else class="pl-3 text-green-600 font-semibold text-xs underline"> {{ file.type }} </span>
-                        </p>
-                        <p>Uploaded by:
-                            <span v-if="file.uploaded_by === 'U'" class="pl-3 text-blue-500"> Client </span>
-                            <span v-else-if="file.uploaded_by === 'A'" class="pl-3 text-blue-600 font-semibold text-xs underline"> Admin </span>
-                            <span v-else class="pl-3 text-green-600 font-semibold text-xs underline"> Quality Assurance </span>
-                        </p>
+
+                    <!--show files-->
+                    <div class="mt-3 px-3 text-sm border border-gray-200 rounded-lg overflow-x-hidden" v-for="file in files">
+                        <div class="grid grid-cols-4 gap-x-2 py-3">
+                            <Link class="col-span-4 underline underline-offset-4 decoration-dashed text-slate-700 font-semibold p-2 "
+
+                            >
+                                {{ file.name }}
+                            </Link>
+                            <p>
+                                Uploaded by:
+                                <span v-if="file.uploaded_by === 'U'" class="font-semibold text-purple-500"> Client </span>
+                                <span v-else-if="file.uploaded_by === 'A'" class="text-blue-600 font-semibold"> Admin </span>
+                                <span v-else class="text-green-600 font-semibold"> Quality Assurance </span>
+                            </p>
+                            <p>Filetype: <span class="text-purple-900 font-semibold">{{ file.type }}</span></p>
+
+                            <Link class="p-1 px-2 w-fit rounded-md text-slate-800 bg-purple-200" @click="downloadFile(file.id, file.name)" :as="`button`">Download</Link>
+
+                            <label class="text-purple-900 font-semibold flex flex-row gap-x-2 place-items-center" v-if="file.uploaded_by !== 'X'">
+                                Show client
+                                <input @input="showClient(file.id)" type="checkbox" class="rounded-full border-purple-500 shadow-sm shadow-purple-400">
+                            </label>
+                        </div>
+
                     </div>
 
                 </div>

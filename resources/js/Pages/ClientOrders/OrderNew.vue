@@ -57,12 +57,12 @@ const props = defineProps({
 
 let form = useForm(
     {
-        'title': localOrder.title ?? '',
-        'academic_level_id': localOrder.academic_level_id ?? 2,
+        'title': localOrder !== null ? localOrder.title : '',
+        'academic_level_id': localOrder !== null ? localOrder.academic_level_id : 2,
         'subject_id': 1,
-        'service_type_id': localOrder.service_type_id ?? 1,
-        'deadline': localOrder.deadline ?? 336,
-        'pages': localOrder.pages ?? 1,
+        'service_type_id': localOrder !== null ? localOrder.service_type_id : 1,
+        'deadline': localOrder !== null ? localOrder.deadline : 336,
+        'pages': localOrder !== null ? localOrder.pages : 1,
         'slides': 0,
         'sources': 1,
         'instructions': '',

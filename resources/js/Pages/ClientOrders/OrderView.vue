@@ -67,7 +67,7 @@ const form = useForm({
 function uploadFiles(id) {
     form.post(route('orders.upload-file', id), {
         onSuccess: () => modalClose(),
-        onFinish: () => form.files=[],
+        onFinish: () => form.reset("files"),
     });
     form.reset('files');
     form.files = [];
@@ -244,9 +244,10 @@ function getTime(timestamp) {
 </script>
 
 <template>
+    <Head :title="`Order #${order.id}: ${ order.title }`" />
     <ClientLayout>
         <template #header>
-            <h1 class="font-bold sm:font-extrabold text-fuchsia-900 leading-8 text-center text-xl md:text-4xl">
+            <h1 class="font-bold sm:font-extrabold text-slate-900 font-serif leading-8 text-center text-xl md:text-4xl">
                 <span class="font-bold">Order #{{order.id}}: </span>{{ order.title }}.
             </h1>
             <p class="justify-self-center text-center text-base text-gray-500 p-4 border-b border-purple-100">
@@ -359,23 +360,37 @@ function getTime(timestamp) {
                         </div>
                     </div>
                 </div>
+
+                <!--files-->
                 <div class="col-span-2">
                     <span class="font-semibold">Files:</span>
-                    <div class="p-2.5 flex flex-wrap bg-fuchsia-700 max-w-xl mx-auto rounded-lg border border-fuchsia-200">
-                        <label class="font-semibold px-6">Add files</label>
+                    <div class="p-2.5 flex flex-row bg-fuchsia-100 max-w-xl mx-auto rounded-lg border border-fuchsia-200">
+                        <label class="hidden md:block lg:font-semibold text-sm px-3 place-self-center">Add files</label>
                         <input multiple
                                class="text-black bg-white pl-1.5 py-1.5 my-auto rounded-lg"
                                type="file" id="files"
+                               placeholder="Upload files"
                                @input="form.files = $event.target.files"
                                name="files[]">
-                        <button class="bg-white -ml-1.5 px-2 py-1.5 rounded-r-lg" @click.prevent="uploadFiles(order.id)">
+                        <button class="bg-white -ml-1.5 px-2 py-1.5 rounded-r-lg border-l" @click.prevent="uploadFiles(order.id)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#18e516" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.7-3-3.2-5.2-6.2-5.6-3-.3-5.9 1.3-7.3 4-1.2 2.5-1 6.5.5 8.8m8.7-1.6V21"/><path d="M16 16l-4-4-4 4"/></svg>
                         </button>
                     </div>
-                    <div class="flex flex-col" v-for="file in files">
-                        <Link class="ml-2 underline text-blue-900 p-2 border-b border-gray-200"
-                              @click="downloadFile(file.id, file.name)"
-                        >{{ file.name }}</Link>
+                    <div class="mt-3 px-3 text-sm border border-gray-200 rounded-lg overflow-x-hidden" v-for="file in files">
+                        <div class="grid grid-cols-3 gap-x-2 py-3">
+                            <Link class="col-span-3 underline underline-offset-4 decoration-dashed text-slate-700 font-semibold p-2 "
+
+                            >
+                                {{ file.name }}
+                            </Link>
+                            <p>
+                                Uploaded by: <span class="text-purple-900 font-semibold">{{ file.uploaded_by === 'U' ? 'Client' : 'Admin'}}</span>
+                            </p>
+                            <p>Filetype: <span class="text-purple-900 font-semibold">{{ file.type }}</span></p>
+
+                            <Link class="p-1 px-2 w-fit rounded-md text-slate-800 bg-purple-200" @click="downloadFile(file.id, file.name)" :as="`button`">Download</Link>
+                        </div>
+
                     </div>
                 </div>
 

@@ -20,6 +20,8 @@ use App\Models\User;
 use App\Models\WriterCategory;
 use App\Notifications\AdminNotification;
 use App\Notifications\WriterNotification;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +29,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
@@ -199,8 +202,8 @@ class OrderController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -338,7 +341,12 @@ class OrderController extends Controller
         ]);
     }
 
-    public function downloadFile($id) {
+    /**
+     * @param $id
+     * @return StreamedResponse
+     */
+    public function downloadFile($id): StreamedResponse
+    {
         $file = File::findOrFail($id);
         return Storage::download($file->location);
     }
@@ -346,23 +354,62 @@ class OrderController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param Order $order
      * @return \Inertia\Response
      */
-    public function edit($id)
+    public function edit(Order $order): \Inertia\Response
     {
         // edit an order
         return Inertia::render('Orders/OrderView', [
-            'order' => Order::findOrFail($id)
+            'order' => $order
+        ]);
+    }
+
+    /**
+     * Show a file to the client.
+     *
+     * @param File $file
+     * @return JsonResponse
+     */
+    public function showClient(File $file): JsonResponse
+    {
+        if ($file->show_client) {
+            // hide if visible
+            $file->show_client = false;
+        } else {
+            // show
+            $file->show_client = true;
+        }
+        // save
+        $file->save();
+        // json response
+        return response()->json([
+            "message" => "File updated Successfully"
+        ]);
+    }
+
+    /**
+     * Delete a file.
+     *
+     * @param File $file
+     * @return JsonResponse
+     */
+    public function destroyFile(File $file): JsonResponse
+    {
+        $file->delete();
+
+        // json response
+        return response()->json([
+            "message" => "File Removed from database."
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(Request $request, $id)
     {
@@ -379,9 +426,9 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function assignWriter(Request $request, $id)
     {
@@ -417,9 +464,9 @@ class OrderController extends Controller
     /**
      * Submit an order for client to review.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function markCompleted(Request $request, $id)
     {
@@ -464,9 +511,9 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function extendDeadline(Request $request, $id)
     {
@@ -485,9 +532,9 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function markCancelled(Request $request, $id)
     {
@@ -518,9 +565,9 @@ class OrderController extends Controller
     /**
      * Upload files.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function uploadFiles(Request $request, $id)
     {
@@ -544,9 +591,9 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function disputeOrder(Request $request, $id)
     {
@@ -564,9 +611,9 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function requestRevision(Request $request, $id)
     {
@@ -585,7 +632,7 @@ class OrderController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy($id)
     {
